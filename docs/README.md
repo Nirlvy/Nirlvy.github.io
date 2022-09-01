@@ -1,3 +1,3 @@
-# 手机点左下角
+# 一个刚刚开始的项目
 
 > An awesome project.

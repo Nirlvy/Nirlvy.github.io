@@ -1,2 +1,2 @@
-- 点下面
-   - [test](page1.md)
+- Arch安装
+   - [基础安装](markdown/arch_install_basic.md)
