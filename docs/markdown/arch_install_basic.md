@@ -18,17 +18,15 @@
 
 <br>
 
-<br>
-
-<br>
+---
 
 ## 开始安装
 
 ### 选1或者3都行
 
-<img src="/home/nirlvy/Documents/Nirlvy.github.io/docs/pic/image-20220901170332317.png" alt="image-20220901170332317" style="zoom:125%;" />
+<img src="../pic/image-20220901170332317.png" alt="image-20220901170332317" style="zoom:125%;" />
 
 ### 漆黑的命令行
 
-<img src="/home/nirlvy/Documents/Nirlvy.github.io/docs/pic/image-20220901170637154.png" alt="image-20220901170637154"  />
+<img src="../pic/image-20220901170637154.png" alt="image-20220901170637154"  />
 
