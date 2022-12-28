@@ -1,67 +1,59 @@
 ## 前言
 
-此次安装教程基于Virtualbox以方便截图
+此次安装教程基于archlinux-2022.12.01-x86_64.iso，请**注意时效性**
 
-教程来源于多处加上自己习惯改编
+使用Virtualbox以方便截图
 
-[在家无聊？一起来装Arch Linux吧！（安装篇）作者：NeMaZHENG](https://www.coolapk.com/feed/16407712?shareKey=YzZhZjQwNDg5YTY0NjMxMDcwNTY~&shareUid=2991758&shareFrom=com.coolapk.market_12.4.2)
 
-[Arch Linux安装好了该做什么？进来康康 作者：NeMaZHENG](https://www.coolapk.com/feed/16504103?shareKey=ZTA0NDM4NmQxYzVkNjMxMDcwZjA~&shareUid=2991758&shareFrom=com.coolapk.market_12.4.2)
-
-[archlinux 简明指南 — Arch Linux 安装使用教程](https://arch.icekylin.online/prologue.html)
-
-[Arch Linux 安装使用教程 - ArchTutorial - Arch Linux Studio](https://archlinuxstudio.github.io/ArchLinuxTutorial/#/)
-
-[官方教程](https://wiki.archlinux.org/title/Installation_guide_(%E7%AE%80%E4%BD%93%E4%B8%AD%E6%96%87))
-
-排名不分先后
 
 ---
 
 ## 开始安装
 
-选1或者3都行
+电脑启动选择镜像作为启动，选择第一个开始安装。~~在以前的版本中有复制到内存中的选项该版本没有~~
 
-![install](../pic/image-20220901170332317.png ':size=60%')
+>[!TIP]
+>
+>使用<code>clear</code>命令清屏
+>
+>使用tab按键自动补全
+>
+>使用<code>rmmod pcspkr</code>或者<code>xset b off</code>命令关闭蜂鸣器（待验证）~~该版本iso虚拟机未报警实体机待验证~~
 
-漆黑的命令行
 
-![install](../pic/image-20220901170637154.png ':size=60%')
 
-> [!NOTE] 
->
-> Linux[#](https://code.visualstudio.com/docs/editor/settings-sync#_linux)
->
-> If the keychain throws the error "No such interface "org.freedesktop.Secret.Collection" on object at path /org/freedesktop/secrets/collection/login", try following the steps described in [issue #92972](https://github.com/microsoft/vscode/issues/92972#issuecomment-625751232) to create a new keyring.
->
-> If the error is "Writing login information to the keychain failed with error 'Unknown or unsupported transport “disabled” for address “disabled:”'", check that `dbus-launch` has been started by following the instructions in [issue #120392](https://github.com/microsoft/vscode/issues/120392#issuecomment-814210643).
->
-> If the error is "The name org.freedesktop.secrets was not provided by any .service files", make sure that you have a package that implements the [Secret Storage API](https://www.gnu.org/software/emacs/manual/html_node/auth/Secret-Service-API.html) installed, such as `gnome-keyring`. VS Code expects such a package for storing credentials on the machine. More information can be found in [issue #104319](https://github.com/microsoft/vscode/issues/104319#issuecomment-1057588052).
->
-> If the error is "Writing login information to the keychain failed with error 'Cannot create an item in a locked collection'.", you need to:
->
-> 1. Add the following lines to your `~/.xinitrc`:
->
->    ```
->    # see https://unix.stackexchange.com/a/295652/332452
->    source /etc/X11/xinit/xinitrc.d/50-systemd-user.sh
->    
->    # see https://wiki.archlinux.org/title/GNOME/Keyring#xinitrc
->    eval $(/usr/bin/gnome-keyring-daemon --start)
->    export SSH_AUTH_SOCK
->    
->    # see https://github.com/NixOS/nixpkgs/issues/14966#issuecomment-520083836
->    mkdir -p "$HOME"/.local/share/keyrings
->    ```
->
-> 2. Login again.
->
-> 3. Have the following programs installed (installation assumes arch/pacman, should be similar to other distros):
->
->    ```
->    sudo pacman -S gnome-keyring libsecret libgnome-keyring
->    ```
->
-> 4. Launch `seahorse`, unlock the default password keyring or create a new one, and keep it unlocked.
->
-> 5. Restart the login procedure.
+-----------
+
+## 连接网络（安装必须需要网络连接）
+
+### 网卡可用性检查
+
+先使用<code>ip link</code>检测网络接口，如果无线网卡不能（特别是螃蟹卡）需先连接有线网络
+
+![image-20221227222126563](../pic/image-20221227222126563.png ':size=70%')
+
+如上实例，1为系统自身的虚拟接口（local），2是有线网卡接口（enp\*\*\*），3为无线网卡接口（wlp\*\*\*）
+
+### 确认网卡已开启电源
+
+在检查完之后执行<code>rfkill list</code>确认没有被rfkill所关闭。确保网卡下方的soft block显示的是**no**，如果为**yes**，执行<code>rfkill unblock wlan</code>
+
+### 有线网卡
+
+在确认已连接之后。输入命令<code>dhcpcd</code>即可
+
+![image-20221227222920618](../pic/image-20221227222920618.png ':size=50%')
+
+### 无线网卡（内置）
+
+```bash
+iwctl # iwd命令行控制
+device list # 列出无线网卡设备名，wlan0等
+station wlan0 scan # 扫描网络
+station wlan0 get-networks # 列出所有 wifi 网络，无法显示中文（下图显示因为不是在tty中）
+station wlan0 connect <wifi-name> # 连接，回车后输入密码再回车，同样无法连接带有中文的名称或者密码的wifi
+exit # 连接成功后退出
+```
+
+![image-20221227231653292](../pic/image-20221227231653292.png)
+
