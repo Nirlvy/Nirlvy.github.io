@@ -36,11 +36,13 @@
 
 ### 确认网卡已开启电源
 
-在检查完之后执行<code>rfkill list</code>确认没有被rfkill所关闭。确保网卡下方的soft block显示的是**no**，如果为**yes**，执行<code>rfkill unblock wlan</code>
+上图中若网卡<>内显示为DOWN,执行<code>ip link set \<device\> on</code>
+
+若报错rfkill执行<code>rfkill list</code>确认没有被rfkill所关闭。确保网卡下方的soft block显示的是**no**，如果为**yes**，执行<code>rfkill unblock wlan</code>
 
 ### 有线网卡
 
-在确认已连接之后。输入命令<code>dhcpcd</code>即可
+一般来说会自动通过dhcp分配ip地址，如果没有输入命令<code>dhcpcd</code>即可
 
 ![image-20221227222920618](../pic/image-20221227222920618.png ':size=50%')
 
@@ -56,4 +58,105 @@ exit # 连接成功后退出
 ```
 
 ![image-20221227231653292](../pic/image-20221227231653292.png)
+
+### 检测连接性
+
+```bash
+ping www.baidu.com
+```
+
+查看是否有连续输出
+
+
+
+---
+
+## 确认时间同步
+
+```bash
+timedatectl status
+```
+
+![image-20221228175431462](../pic/image-20221228175431462.png)
+
+时间为UTC时间，+8小时为北京时间，不用考虑修改时区，时间正确即可，否则无法连接源
+
+
+
+---
+
+## 分盘
+
+~~相信现在电脑都是UEFI模式启动了吧~~
+
+### 确认为UEFI模式
+
+```bash
+ls /sys/firmware/efi/efivars
+```
+
+如果有大量输出为UEFI模式，以下**仅针对UEFI模式安装**
+
+### efi分区
+
+#### 已经安装过win
+
+win已经分好过一个efi（esp）分区，直接使用即可，即下图的nvme0n1p1，能看到SYSTEM_DRV标识
+
+![image-20221228180321194](../pic/image-20221228180321194.png)
+
+#### 全新硬盘
+
+```bash
+cfdisk /dev/<driver>
+```
+
+选择gpt回车
+
+![image-20221228181313806](../pic/image-20221228181313806.png)
+
+左右方向键选择New，回车，输入想分配的大小，efi分区300m左右，键入300M回车
+
+![image-20221228181650563](../pic/image-20221228181650563.png ':size=50%')
+
+接着选择Type调整分区类型
+
+![image-20221228182630210](../pic/image-20221228182630210.png ':size=50%')
+
+选择第一个
+
+![image-20221228182605781](../pic/image-20221228182605781.png ':size=50%')
+
+### 根目录
+
+同上，只不过不用重新选择分区格式了
+
+### Swap交换分区（可选）
+
+同上，分区格式选择Linux swap
+
+一般分配大小为40%-100%的**内存**大小
+
+具体内容参考<待补充>
+
+> [!TIP]
+>
+> 一般来说会选择交换文件，两者效果相同而且更方便，**但是如果文件系统为btrfs，则需要额外设置**
+
+完成后选择Write回车输入yes保存，**请确认没有清空windows系统的内容**，然后选择Quit退出
+
+![image-20221228201534371](../pic/image-20221228201534371.png ':size=50%')
+
+![image-20221228202224758](../pic/image-20221228202224758.png)
+
+但是若使用btrfs文件系统仍需格式化。~~所以那个type完全没用是吧~~
+
+### 格式化分区
+
+```bash
+mkfs.fat -F 32 /dev/sda1 # 格式化efi分区
+mkfs.ext4 /dev/sda2 # 格式化根分区为ext4格式
+mkfs.btrfs /dev/sda2 # 格式化根分区为btrfs格式
+# 此处位置仅为示例，两个格式二选一，btrfs牺牲微小性能的同时，支持了更多功能<待补充>
+```
 
