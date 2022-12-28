@@ -160,3 +160,48 @@ mkfs.btrfs /dev/sda2 # 格式化根分区为btrfs格式
 # 此处位置仅为示例，两个格式二选一，btrfs牺牲微小性能的同时，支持了更多功能<待补充>
 ```
 
+### 挂载分区
+
+#### ext4文件系统
+
+```bash
+mount /dev/sda2 /mnt
+mkdir /mnt/boot/EFI # 如果装了windows则已有该目录
+mount /dev/sda1 /mnt/boot/EFI
+```
+
+#### btrfs文件系统
+
+```bash
+mount -t btrfs -o subvol=/@,compress=zstd /dev/sda2 /mnt
+mkdir /mnt/home
+mount -t btrfs -o subvol=/@home,compress=zstd /dev/sda2 /mnt/home 
+mkdir -p /mnt/boot/EFI
+mount /dev/sda1 /mnt/boot/EFI
+```
+
+挂载完成后<code>df -h</code>检测一下
+
+![image-20221228210101357](../pic/image-20221228210101357.png)
+
+
+
+---
+
+## 安装
+
+没错，到现在都是准备工作，才刚刚开始安装
+
+### 换源
+
+由reflector服务会自动挑选出几个“合适的源”，实际上可能并不怎么合适，所以需要进行修改
+
+```bash
+vim /etc/pacman.d/mirrorlist
+```
+
+> [!TIP]
+>
+> xxxxxxxxx
+
+![image-20221228210738115](../pic/image-20221228210738115.png)
