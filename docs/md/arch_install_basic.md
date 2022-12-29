@@ -131,17 +131,41 @@ cfdisk /dev/<driver>
 
 同上，只不过不用重新选择分区格式了
 
-### Swap交换分区（可选）
+### Swap交换分区（可选，不推荐）
 
 同上，分区格式选择Linux swap
 
 一般分配大小为40%-100%的**内存**大小
 
-具体内容参考<待补充>
+同样的方法分区
+
+然后
+
+```bash
+mkswap /dev/sdxy
+```
+
+想要启用一个设备作为交换分区：
+
+```bash
+swapon /dev/sdxy
+```
+
+想要启动时自动启用交换分区，添加一个条目到 `/etc/fstab`:
+
+```
+UUID=device_UUID none swap defaults 0 0
+```
+
+UUID可以通过以下命令获得：
+
+```bash
+lsblk -no UUID /dev/sdxy
+```
 
 > [!TIP]
 >
-> 一般来说会选择交换文件，两者效果相同而且更方便，**但是如果文件系统为btrfs，则需要额外设置**
+> 一般来说会选择[交换文件]()，两者效果相同而且更方便，**但是如果文件系统为btrfs，则需要额外设置**
 
 完成后选择Write回车输入yes保存，**请确认没有清空windows系统的内容**，然后选择Quit退出
 
@@ -178,7 +202,7 @@ mount -t btrfs -o compress=zstd /dev/sda2 /mnt # -t指定文件系统 -o指定�
 btrfs subvolume create /mnt/@ # 创建 / 目录子卷
 btrfs subvolume create /mnt/@home # 创建 /home 目录子卷
 btrfs subvolume list -p /mnt # 查看挂载情况
-umount /mnt
+umount /mnt # 解除挂载
 # 重新挂载子卷
 mount -t btrfs -o subvol=/@,compress=zstd /dev/sda2 /mnt
 mkdir /mnt/home
@@ -211,7 +235,7 @@ vim /etc/pacman.d/mirrorlist
 >
 > vim分为分为三种模式，分别是**命令模式（Command mode）**，**输入模式（Insert mode）**和**底线命令模式（Last line mode）**。 这三种模式的作用分别是：
 >
-> ### 命令模式：
+> ##### 命令模式：
 >
 > 用户刚刚启动 vi/vim，便进入了命令模式。
 >
@@ -225,7 +249,7 @@ vim /etc/pacman.d/mirrorlist
 >
 > 若想要编辑文本：启动Vim，进入了命令模式，按下i，切换到输入模式。
 >
-> ### 输入模式
+> ##### 输入模式
 >
 > 在命令模式下按下i就进入了输入模式。
 >
@@ -234,14 +258,11 @@ vim /etc/pacman.d/mirrorlist
 > - **方向键**，在文本中移动光标
 > - **HOME**/**END**，移动光标到行首/行尾
 > - **Page Up**/**Page Down**，上/下翻页
-> - **Insert**，切换光标为输入/替换模式，光标将变成竖线/下划线
 > - **ESC**，退出输入模式，切换到命令模式
 >
-> ### 底线命令模式
+> ##### 底线命令模式
 >
 > 在命令模式下按下:（英文冒号）就进入了底线命令模式。
->
-> 底线命令模式可以输入单个或多个字符的命令，可用的命令非常多。
 >
 > 在底线命令模式中，基本的命令有（已经省略了冒号）：
 >
@@ -251,7 +272,7 @@ vim /etc/pacman.d/mirrorlist
 >
 > 按ESC键可随时退出底线命令模式。
 
-删除大部分的源只保留内地的几个，如
+使用dd删除大部分的源，只保留内地的几个，如
 
 ```
 Server = https://mirrors.tuna.tsinghua.edu.cn/archlinux/$repo/os/$arch
@@ -265,16 +286,37 @@ Server = http://mirrors.aliyun.com/archlinux/$repo/os/$arch
 ### 使用pacstrap脚本安装系统
 
 ```bash
-pacman -Syu # 有时软件包过时如密钥会导致部分软件无法安装，如果xi
+pacman -Syy # 强制更新软件包缓存
+pacman -Syu # 有时软件包过时（archlinux-keyring）如密钥会导致部分软件无法安装，如果下一步不报错这一步可以跳过
 pacstrap /mnt base base-devel linux linux-firmware btrfs-progs # 仅在使用btrfs文件系统时需要安装btrfs-progs
 ```
 
 > [!TIP]
+>
+> pacman -S foo 安装一个包
+>
+> pacman -S extra/<package> 选择一个源的包安装
+>
+> pacman -Syu 更新系统，y表示更新包缓存，yy强制更新，u表示更新系统
+>
+> pacman -Ss foo 搜索一个软件包，如果只想搜索名称，可以使用正则表达式'^foo-'
+>
+> pacman -Si 搜索一个包的详细信息
+>
+> pacman -Rns foo 卸载一个包及其所有没有被其他已安装软件包使用的依赖关系且不备份配置文件
+>
+> pacman -Rc foo 递归卸载，如同时卸载被依赖的软件
+>
+> pacman -Qs foo 搜索本地安装的软件
+>
+> pacman -Qi  foo 本地一个包的详细信息
+>
+> pacman -Qtdq | pacman -Rns - 卸载所有孤儿包
 
 安装一些必要软件
 
 ```bash
-pacstrap /mnt vim networkmanager
+pacstrap /mnt vim networkmanager dhcpcd
 ```
 
 个人联网程序更倾向于使用networkmanager而不是iwd或其他，networkmanager提供的nmtui图形界面足够好用，同时一些DE如gnome，kde默认使用它
@@ -305,7 +347,7 @@ arch-chroot /mnt
 ln -sf /usr/share/zoneinfo/Asia/Shanghai /etc/localtime
 ```
 
-~~相信都在国内吧~~，别问为什么不是北京，~~其实就是建国前也是像美丽国一样划了几个时区那时并没有指定北京~~，没有就是没有~~可以自己加但是没必要~~
+~~相信都在国内吧~~，别问为什么不是北京，没有就是没有~~可以自己加但是没必要~~
 
 ### 设置系统时间
 
@@ -313,7 +355,7 @@ ln -sf /usr/share/zoneinfo/Asia/Shanghai /etc/localtime
 hwclock --systohc
 ```
 
-设置为硬件时间为UTC时间，会导致linux和windows切换后windows的时间提前八个小时，参考（待补充）
+设置为硬件时间为UTC时间，会导致linux和windows切换后windows的时间提前八个小时，[参考](md/Tips#Windows和Linux系统时间同步)
 
 ### 本地化
 
@@ -395,7 +437,7 @@ grub-install --target=x86_64-efi --efi-directory=/boot --bootloader-id=Arch
 vim /etc/default/grub
 ```
 
-在<code>GRUB_CMDLINE_LINUX_DEFAULT</code>中为了检查启动错误可以考虑删除<code>quit</code>，加入<code>nowatchdog</code>参数禁用看门狗加快开机关机速度，~~不是服务器谁用这个啊~~
+在<code>GRUB_CMDLINE_LINUX_DEFAULT</code>中为了检查启动错误可以考虑删除<code>quiet</code>，加入<code>nowatchdog</code>参数禁用看门狗加快开机关机速度，~~不是服务器谁用这个啊~~
 
 如果是要加入windows启动项，除了要安装os-prober，还有取消最后一行的注释
 
@@ -403,7 +445,7 @@ vim /etc/default/grub
 grub-mkconfig -o /boot/grub/grub.cfg
 ```
 
-> [!WARING]
+> [!WARNING]
 >
 > 每次执行过<code>grub-install</code>，更新完或者安装了其他内核，或者修改过<code>/etc/default/grub</code>之后都需要重新执行该命令
 
@@ -422,7 +464,7 @@ grub-mkconfig -o /boot/grub/grub.cfg
 > mv /boot/EFI/BOOT/grubx64.efi /boot/EFI/BOOT/BOOTX64.EFI
 > ```
 
- [关于grub的美化]()
+ [关于GRUB的美化](md/Tip#关于GRUB的美化)
 
 ---
 
