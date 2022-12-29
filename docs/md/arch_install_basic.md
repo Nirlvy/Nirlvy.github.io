@@ -18,6 +18,8 @@
 >
 >使用tab按键自动补全
 >
+>使用方向上键查看历史记录
+>
 >使用<code>rmmod pcspkr</code>或者<code>xset b off</code>命令关闭蜂鸣器（待验证）~~该版本iso虚拟机未报警实体机待验证~~
 
 
@@ -42,9 +44,7 @@
 
 ### 有线网卡
 
-一般来说会自动通过dhcp分配ip地址，如果没有输入命令<code>dhcpcd</code>即可
-
-![image-20221227222920618](../pic/image-20221227222920618.png ':size=50%')
+一般来说会自动通过dhcp分配ip地址
 
 ### 无线网卡（内置）
 
@@ -87,7 +87,7 @@ timedatectl status
 
 ## 分盘
 
-~~相信现在电脑都是UEFI模式启动了吧~~
+~~相信现在电脑都是UEFI模式启动了吧，而且建议在windows那边先把盘分好~~
 
 ### 确认为UEFI模式
 
@@ -157,7 +157,8 @@ cfdisk /dev/<driver>
 mkfs.fat -F 32 /dev/sda1 # 格式化efi分区
 mkfs.ext4 /dev/sda2 # 格式化根分区为ext4格式
 mkfs.btrfs /dev/sda2 # 格式化根分区为btrfs格式
-# 此处位置仅为示例，两个格式二选一，btrfs牺牲微小性能的同时，支持了更多功能<待补充>
+# 此处位置仅为示例，两个格式二选一
+# btrfs牺牲微小性能的同时，支持了更多功能，如透明和自动压缩，节省空间，延长闪存寿命，以及极为迅速的备份还原
 ```
 
 ### 挂载分区
@@ -166,17 +167,23 @@ mkfs.btrfs /dev/sda2 # 格式化根分区为btrfs格式
 
 ```bash
 mount /dev/sda2 /mnt
-mkdir /mnt/boot/EFI # 如果装了windows则已有该目录
 mount /dev/sda1 /mnt/boot
 ```
 
-#### btrfs文件系统
+#### btrfs文件系统 更为详细参考
 
 ```bash
+# 先创建子卷
+mount -t btrfs -o compress=zstd /dev/sda2 /mnt # -t指定文件系统 -o指定参数 挂载时启动压缩
+btrfs subvolume create /mnt/@ # 创建 / 目录子卷
+btrfs subvolume create /mnt/@home # 创建 /home 目录子卷
+btrfs subvolume list -p /mnt # 查看挂载情况
+umount /mnt
+# 重新挂载子卷
 mount -t btrfs -o subvol=/@,compress=zstd /dev/sda2 /mnt
 mkdir /mnt/home
 mount -t btrfs -o subvol=/@home,compress=zstd /dev/sda2 /mnt/home 
-mkdir -p /mnt/boot/EFI
+mkdir /mnt/boot
 mount /dev/sda1 /mnt/boot
 ```
 
@@ -200,15 +207,56 @@ mount /dev/sda1 /mnt/boot
 vim /etc/pacman.d/mirrorlist
 ```
 
-> [!TIP]
+> [!NOTE]
 >
-> xxxxxxxxx
+> vim分为分为三种模式，分别是**命令模式（Command mode）**，**输入模式（Insert mode）**和**底线命令模式（Last line mode）**。 这三种模式的作用分别是：
+>
+> ### 命令模式：
+>
+> 用户刚刚启动 vi/vim，便进入了命令模式。
+>
+> 此状态下敲击键盘动作会被Vim识别为命令，而非输入字符。比如我们此时按下i，并不会输入一个字符，i被当作了一个命令。
+>
+> 以下是常用的几个命令：
+>
+> - **i** 切换到输入模式，以输入字符。
+> - **x** 删除当前光标所在处的字符。
+> - **:** 切换到底线命令模式，以在最底一行输入命令。
+>
+> 若想要编辑文本：启动Vim，进入了命令模式，按下i，切换到输入模式。
+>
+> ### 输入模式
+>
+> 在命令模式下按下i就进入了输入模式。
+>
+> 在输入模式中，可以使用以下按键：
+>
+> - **方向键**，在文本中移动光标
+> - **HOME**/**END**，移动光标到行首/行尾
+> - **Page Up**/**Page Down**，上/下翻页
+> - **Insert**，切换光标为输入/替换模式，光标将变成竖线/下划线
+> - **ESC**，退出输入模式，切换到命令模式
+>
+> ### 底线命令模式
+>
+> 在命令模式下按下:（英文冒号）就进入了底线命令模式。
+>
+> 底线命令模式可以输入单个或多个字符的命令，可用的命令非常多。
+>
+> 在底线命令模式中，基本的命令有（已经省略了冒号）：
+>
+> - q 退出程序
+> - w 保存文件
+> - ！强制执行，如修改但是不保存退出使用q！
+>
+> 按ESC键可随时退出底线命令模式。
 
 删除大部分的源只保留内地的几个，如
 
-xxxxx
-
-xxxxx
+```
+Server = https://mirrors.tuna.tsinghua.edu.cn/archlinux/$repo/os/$arch
+Server = http://mirrors.aliyun.com/archlinux/$repo/os/$arch
+```
 
 最后保存退出
 
@@ -217,26 +265,19 @@ xxxxx
 ### 使用pacstrap脚本安装系统
 
 ```bash
+pacman -Syu # 有时软件包过时如密钥会导致部分软件无法安装，如果xi
 pacstrap /mnt base base-devel linux linux-firmware btrfs-progs # 仅在使用btrfs文件系统时需要安装btrfs-progs
 ```
 
 > [!TIP]
 
-如果提示了gpg密钥报错
-
-```bash
-pacman -S archlinux-keyring
-```
-
-再次尝试安装
-
 安装一些必要软件
 
 ```bash
-pacstrap /mnt vim sudo networkmanager
+pacstrap /mnt vim networkmanager
 ```
 
-个人联网程序更倾向于使用networkmanager而不是iwd或其他，networkmanager提供的nmtui图形界面足够好用
+个人联网程序更倾向于使用networkmanager而不是iwd或其他，networkmanager提供的nmtui图形界面足够好用，同时一些DE如gnome，kde默认使用它
 
 ### 生成fstab文件
 
@@ -347,6 +388,39 @@ grub-install --target=x86_64-efi --efi-directory=/boot --bootloader-id=Arch
 │      └── grubx64.efi 
 
 └──  Microsoft
+
+### 修改grub启动内核参数
+
+```bash
+vim /etc/default/grub
+```
+
+在<code>GRUB_CMDLINE_LINUX_DEFAULT</code>中为了检查启动错误可以考虑删除<code>quit</code>，加入<code>nowatchdog</code>参数禁用看门狗加快开机关机速度，~~不是服务器谁用这个啊~~
+
+如果是要加入windows启动项，除了要安装os-prober，还有取消最后一行的注释
+
+```bash
+grub-mkconfig -o /boot/grub/grub.cfg
+```
+
+> [!WARING]
+>
+> 每次执行过<code>grub-install</code>，更新完或者安装了其他内核，或者修改过<code>/etc/default/grub</code>之后都需要重新执行该命令
+
+> [!WARNING]
+>
+> 部分主板可能会导致grub不显示引导项，上述命令替换为
+>
+> ```bash
+> grub-install --target=x86_64-efi --efi-directory=/boot --removable
+> ```
+>
+> 或者在<code>grub-install</code>之后
+>
+> ```bash
+> mv /boot/EFI/grub esp/EFI/BOOT
+> mv /boot/EFI/BOOT/grubx64.efi /boot/EFI/BOOT/BOOTX64.EFI
+> ```
 
  [关于grub的美化]()
 
