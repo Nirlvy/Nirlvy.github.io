@@ -95,11 +95,11 @@ timedatectl status
 ls /sys/firmware/efi/efivars
 ```
 
-如果有大量输出为UEFI模式，以下**仅针对UEFI模式安装**
+如果有大量输出为UEFI模式，以下**仅针对UEFI模式安装**，~~BIOS模式以后再补上~~
 
-### efi分区
+### EFI分区
 
-#### 已经安装过win
+#### 已经安装过windows
 
 win已经分好过一个efi（esp）分区，直接使用即可，即下图的nvme0n1p1，能看到SYSTEM_DRV标识
 
