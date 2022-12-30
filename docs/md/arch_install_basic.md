@@ -363,7 +363,7 @@ hwclock --systohc
 vim /etc/locale.gen
 ```
 
-删除（i进入insert模式，delete删除光标后）<code>en_US.UTF-8 UTF-8</code>和<code>zh_CN.UTF-8 UTF-8</code>前的#，保存退出（esc :wq)
+删除<code>en_US.UTF-8 UTF-8</code>和<code>zh_CN.UTF-8 UTF-8</code>前的#，保存退出
 
 ```bash
 locale-gen
@@ -381,6 +381,12 @@ echo myhostname(你的主机名) > /etc/hostname
 ```
 
 接着重新联网，[参考](#连接网络（安装必须需要网络连接）)
+
+同时设置自启dhcpcd服务用于自动分配ip地址
+
+```bash
+systemctl enable --now dhcpcd
+```
 
 ### 设置Root密码
 
@@ -441,15 +447,17 @@ vim /etc/default/grub
 
 如果是要加入windows启动项，除了要安装os-prober，还有取消最后一行的注释
 
+检查一下/boot是否有内核文件生成
+
 ```bash
+ls /boot # 查看有没有initramfs-linux.img等文件
+mkinitcpio -P # 没有生成就执行
 grub-mkconfig -o /boot/grub/grub.cfg
 ```
 
 > [!WARNING]
 >
 > 每次执行过<code>grub-install</code>，更新完或者安装了其他内核，或者修改过<code>/etc/default/grub</code>之后都需要重新执行该命令
-
-> [!WARNING]
 >
 > 部分主板可能会导致grub不显示引导项，上述命令替换为
 >
@@ -464,7 +472,7 @@ grub-mkconfig -o /boot/grub/grub.cfg
 > mv /boot/EFI/BOOT/grubx64.efi /boot/EFI/BOOT/BOOTX64.EFI
 > ```
 
- [关于GRUB的美化](md/Tip#关于GRUB的美化)
+ [关于GRUB的美化](md/Tip#关于grub的美化)
 
 ---
 
