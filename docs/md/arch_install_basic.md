@@ -14,13 +14,13 @@
 
 >[!TIP]
 >
->使用<code>clear</code>命令清屏
+>使用`clear`命令清屏
 >
 >使用tab按键自动补全
 >
 >使用方向上键查看历史记录
 >
->使用<code>rmmod pcspkr</code>或者<code>xset b off</code>命令关闭蜂鸣器（待验证）~~该版本iso虚拟机未报警实体机待验证~~
+>使用`rmmod pcspkr`或者`xset b off`命令关闭蜂鸣器（待验证）~~该版本iso虚拟机未报警实体机待验证~~
 
 
 
@@ -30,7 +30,7 @@
 
 ### 网卡可用性检查
 
-先使用<code>ip link</code>检测网络接口，如果无线网卡不能（特别是螃蟹卡）需先连接有线网络
+先使用`ip link`检测网络接口，如果无线网卡不能（特别是螃蟹卡）需先连接有线网络
 
 ![image-20221227222126563](../pic/image-20221227222126563.png ':size=70%')
 
@@ -38,9 +38,9 @@
 
 ### 确认网卡已开启电源
 
-上图中若网卡<>内显示为DOWN,执行<code>ip link set \<device\> on</code>
+上图中若网卡<>内显示为DOWN,执行`ip link set \<device\> on`
 
-若报错rfkill执行<code>rfkill list</code>确认没有被rfkill所关闭。确保网卡下方的soft block显示的是**no**，如果为**yes**，执行<code>rfkill unblock wlan</code>
+若报错rfkill执行`rfkill list`确认没有被rfkill所关闭。确保网卡下方的soft block显示的是**no**，如果为**yes**，执行`rfkill unblock wlan`
 
 ### 有线网卡
 
@@ -211,7 +211,7 @@ mkdir /mnt/boot
 mount /dev/sda1 /mnt/boot
 ```
 
-挂载完成后<code>df -h</code>检测一下
+挂载完成后`df -h`检测一下
 
 ![image-20221228210101357](../pic/image-20221228210101357.png)
 
@@ -303,6 +303,10 @@ pacstrap /mnt base base-devel linux linux-firmware btrfs-progs # 仅在使用btr
 >
 > pacman -Si 搜索一个包的详细信息
 >
+> pacman -Scc 清除全部缓存
+>
+> pacman -U 指定文件安装一个包
+>
 > pacman -Rns foo 卸载一个包及其所有没有被其他已安装软件包使用的依赖关系且不备份配置文件
 >
 > pacman -Rc foo 递归卸载，如同时卸载被依赖的软件
@@ -363,7 +367,7 @@ hwclock --systohc
 vim /etc/locale.gen
 ```
 
-删除<code>en_US.UTF-8 UTF-8</code>和<code>zh_CN.UTF-8 UTF-8</code>前的#，保存退出
+删除`en_US.UTF-8 UTF-8`和`zh_CN.UTF-8 UTF-8`前的#，保存退出
 
 ```bash
 locale-gen
@@ -411,9 +415,9 @@ pacman -S grub efibootmgr os-prober
 
 > [!NOTE]
 >
-> <code>efibootmgr</code>被 GRUB 脚本用来将启动项写入 NVRAM
+> `efibootmgr`被 GRUB 脚本用来将启动项写入 NVRAM
 >
-> <code>os-prober</code>用来探测windows引导项用来grub界面选择windows启动
+> `os-prober`用来探测windows引导项用来grub界面选择windows启动
 
 ```bash
 grub-install --target=x86_64-efi --efi-directory=/boot --bootloader-id=Arch
@@ -421,11 +425,11 @@ grub-install --target=x86_64-efi --efi-directory=/boot --bootloader-id=Arch
 
 > [!NOTE]
 >
-> <code>--target=x86_64-efi</code>指定安装格式（必要）
+> `--target=x86_64-efi`指定安装格式（必要）
 >
-> <code>--efi-directory=/boot</code>指定安装位置，会自动创建EFI和grub文件夹（必要）
+> `--efi-directory=/boot`指定安装位置，会自动创建EFI和grub文件夹（必要）
 >
-> <code>--bootloader-id=Arch</code>指定创建的文件夹名称，默认为arch（非必要）
+> `--bootloader-id=Arch`指定创建的文件夹名称，默认为arch（非必要）
 
 最后目录会是这样
 
@@ -443,7 +447,7 @@ grub-install --target=x86_64-efi --efi-directory=/boot --bootloader-id=Arch
 vim /etc/default/grub
 ```
 
-在<code>GRUB_CMDLINE_LINUX_DEFAULT</code>中为了检查启动错误可以考虑删除<code>quiet</code>，加入<code>nowatchdog</code>参数禁用看门狗加快开机关机速度，~~不是服务器谁用这个啊~~
+在`GRUB_CMDLINE_LINUX_DEFAULT`中为了检查启动错误可以考虑删除`quiet`，加入`nowatchdog`参数禁用看门狗加快开机关机速度，~~不是服务器谁用这个啊~~
 
 如果是要加入windows启动项，除了要安装os-prober，还有取消最后一行的注释
 
@@ -457,7 +461,7 @@ grub-mkconfig -o /boot/grub/grub.cfg
 
 > [!WARNING]
 >
-> 每次执行过<code>grub-install</code>，更新完或者安装了其他内核，或者修改过<code>/etc/default/grub</code>之后都需要重新执行该命令
+> 每次执行过`grub-install`，更新完或者安装了其他内核，或者修改过`/etc/default/grub`之后都需要重新执行该命令
 >
 > 部分主板可能会导致grub不显示引导项，上述命令替换为
 >
@@ -465,17 +469,133 @@ grub-mkconfig -o /boot/grub/grub.cfg
 > grub-install --target=x86_64-efi --efi-directory=/boot --removable
 > ```
 >
-> 或者在<code>grub-install</code>之后
+> 或者在`grub-install`之后
 >
 > ```bash
 > mv /boot/EFI/grub esp/EFI/BOOT
 > mv /boot/EFI/BOOT/grubx64.efi /boot/EFI/BOOT/BOOTX64.EFI
 > ```
 
- [关于GRUB的美化](md/Tip#关于grub的美化)
+ [关于GRUB的美化](md/Tips#关于grub的美化)
+
+
 
 ---
 
-## 完成
+## 确保系统更新
 
-至此安装完毕，可以手动先取消挂载然后<code>reboot</code>重启或者直接重启，断开安装媒介直接启动
+实际上本身就应该定期执行
+
+```bash
+pacman -Syu
+```
+
+如果怕滚炸，可以
+
+```bash
+pacman -Syu --ignore=linux
+```
+
+同时定期[备份]()
+
+
+
+---
+
+## 创建非特权用户
+
+只使用root用户是危险的，特别是开放了ssh的root用户，~~不过应该很少有人使用arch做服务器吧~~，同时`AUR helper`也不被允许在root下使用
+
+```bash
+useradd -m -G "附加组" -s "登陆shell" "用户"
+```
+
+- `-m`/`--create-home`：创建用户主目录`/home/[用户名]`；在自己的主目录内，即使不是root用户也可以读写文件、安装程序等等
+- `-G`/`--groups`：用户要加入的附加组列表；使用逗号分隔多个组，不要添加空格；如果不设置，用户仅仅加入初始组
+- `-s`/`--shell`：用户默认登录shell的路径；启动过程结束后，默认启动的登录shell在此处设定；请确保使用的shell已经安装，默认是 `bash`
+
+如
+
+```bash
+useradd -m -G wheel -s /bin/bash nirlvy
+```
+
+`wheel`管理组，可以访问 `journal` 文件和 `CUPS` 打印服务，可以用户 `sudo`和 `su`命令权限管理(需要额外[设置](md/arch_install_next#修改sudoers文件))
+
+如果是wm用户，且使用`light`包控制亮度，还需加入`input`和`vedio`组
+
+> [!WARNING]
+>
+> 请不要使用`/usr/bin/bash`等替换`/bin/bash`
+
+[更多用户组相关内容](md/Tips.md#用户组)
+
+### 添加密码
+
+```bash
+passwd "用户"
+```
+
+### 修改sudoers文件
+
+默认`wheel`组也是不能够使用`sudo`的，需要修改`/etc/sudoers`，但是一般不直接编辑
+
+```bash
+EDITORS=vim visudo # 因为默认编辑器为vi,并没有安装所以单独指定
+```
+
+删除
+
+```
+## Uncomment to allow members of group wheel to execute any command
+# %wheel ALL=(ALL:ALL) ALL
+```
+
+第二行前的#，保存退出
+
+### 切换到新用户
+
+```bash
+exit
+```
+
+登陆新用户
+
+```bash
+echo EDITORS=vim >> ~/.bashrc # 如果使用其他shell改成对应文件
+```
+
+
+
+---
+
+## 开启 32 位支持库与 archlinuxcn仓库以及arch4edu仓库以及Aur支持
+
+```bash
+sudo vim /etc/pacman.conf
+```
+
+![image-20221231153608418](/home/nirlvy/Documents/nirlvy/docs/pic/image-20221231153608418.png)
+
+取消[multilib]下一行的注释
+
+在最后追加四行，保存退出
+
+```bash
+sudo pacman -S archlinuxcn-keyring # archlinuxcn源密钥
+
+sudo pacman-key --recv-keys 7931B6D628C8D3BA # arch4edu源密钥
+sudo pacman-key --finger 7931B6D628C8D3BA
+sudo pacman-key --lsign-key 7931B6D628C8D3BA
+
+sudo pacman -Syyu
+
+sudo pacman -S paru # AUR helper之一
+```
+
+`paru`和`pacman`命令基本相同
+
+```bash
+paru # 等价于paru -Syu
+```
+
