@@ -1,6 +1,8 @@
+
+
 ## 前言
 
-此次安装教程基于archlinux-2022.12.01-x86_64.iso，请**注意时效性**
+此次安装教程基于archlinux-2023.07.01-x86_64.iso，请**注意时效性**
 
 使用Virtualbox以方便截图
 
@@ -20,7 +22,7 @@
 >
 >使用方向上键查看历史记录
 >
->使用`rmmod pcspkr`或者`xset b off`命令关闭蜂鸣器（待验证）~~该版本iso虚拟机未报警实体机待验证~~
+>使用`rmmod pcspkr`关闭蜂鸣器
 
 
 
@@ -38,7 +40,7 @@
 
 ### 确认网卡已开启电源
 
-上图中若网卡<>内显示为DOWN,执行`ip link set \<device\> on`
+上图中若网卡<>内显示为DOWN,执行`ip link set <device> on`
 
 若报错rfkill执行`rfkill list`确认没有被rfkill所关闭。确保网卡下方的soft block显示的是**no**，如果为**yes**，执行`rfkill unblock wlan`
 
@@ -95,7 +97,7 @@ timedatectl status
 ls /sys/firmware/efi/efivars
 ```
 
-如果有大量输出为UEFI模式，以下**仅针对UEFI模式安装**，~~BIOS模式以后再补上~~
+如果有大量输出目录为UEFI模式，以下**仅针对UEFI模式安装**，~~BIOS模式以后再补上~~
 
 ### EFI分区
 
@@ -103,11 +105,18 @@ ls /sys/firmware/efi/efivars
 
 win已经分好过一个efi（esp）分区，直接使用即可，即下图的nvme0n1p1，能看到SYSTEM_DRV标识
 
+```bash
+lsblk -f
+```
+
+
+
 ![image-20221228180321194](../pic/image-20221228180321194.png)
 
 #### 全新硬盘
 
 ```bash
+lsblk
 cfdisk /dev/<driver>
 ```
 
@@ -173,8 +182,6 @@ lsblk -no UUID /dev/sdxy
 
 ![image-20221228202224758](../pic/image-20221228202224758.png)
 
-但是若使用btrfs文件系统仍需格式化。~~所以那个type完全没用是吧~~
-
 ### 格式化分区
 
 ```bash
@@ -182,7 +189,7 @@ mkfs.fat -F 32 /dev/sda1 # 格式化efi分区
 mkfs.ext4 /dev/sda2 # 格式化根分区为ext4格式
 mkfs.btrfs /dev/sda2 # 格式化根分区为btrfs格式
 # 此处位置仅为示例，两个格式二选一
-# btrfs牺牲微小性能的同时，支持了更多功能，如透明和自动压缩，节省空间，延长闪存寿命，以及极为迅速的备份还原
+# btrfs支持了更多功能，如快照，但是现在有反馈会比其他系统更多写入，对此观察中
 ```
 
 ### 挂载分区
@@ -194,7 +201,7 @@ mount /dev/sda2 /mnt
 mount /dev/sda1 /mnt/boot
 ```
 
-#### btrfs文件系统 更为详细参考
+#### btrfs文件系统
 
 ```bash
 # 先创建子卷
@@ -205,15 +212,12 @@ btrfs subvolume list -p /mnt # 查看挂载情况
 umount /mnt # 解除挂载
 # 重新挂载子卷
 mount -t btrfs -o subvol=/@,compress=zstd /dev/sda2 /mnt
-mkdir /mnt/home
 mount -t btrfs -o subvol=/@home,compress=zstd /dev/sda2 /mnt/home 
+mkdir /mnt/home
+mkdir /mnt/efi
 mkdir /mnt/boot
-mount /dev/sda1 /mnt/boot
+mount /dev/sda1 /mnt/efi
 ```
-
-挂载完成后`df -h`检测一下
-
-![image-20221228210101357](../pic/image-20221228210101357.png)
 
 
 
@@ -228,6 +232,7 @@ mount /dev/sda1 /mnt/boot
 由reflector服务会自动挑选出几个“合适的源”，实际上可能并不怎么合适，所以需要进行修改
 
 ```bash
+systemctl disable --now reflector
 vim /etc/pacman.d/mirrorlist
 ```
 
@@ -272,7 +277,7 @@ vim /etc/pacman.d/mirrorlist
 >
 > 按ESC键可随时退出底线命令模式。
 
-使用dd删除大部分的源，只保留内地的几个，如
+使用`数字dd`如`10dd`删除10行。删除大部分的源，只保留内地的几个，如
 
 ```
 Server = https://mirrors.tuna.tsinghua.edu.cn/archlinux/$repo/os/$arch
@@ -371,12 +376,12 @@ vim /etc/locale.gen
 
 ```bash
 locale-gen
-echo LANG=en_US.UTF-8 > /etc/locale.conf
+echo LANG=zh_CN.UTF-8 > /etc/locale.conf
 ```
 
 > [!WARNING]
 >
-> 不推荐给locale.conf设置中文locale，会导致tty乱码，如启动失败时显示的日志部分可能为方块或者？，所以针对用户单独设置locale（待补充），也可以使用[chcon](https://aur.archlinux.org/packages/zhcon)<sup>AUR</sup>实现tty显示中文以及输入，~~反正我没用过~~
+> 不推荐给locale.conf设置中文locale，会导致tty乱码，如启动失败时显示的日志部分可能为方块或者？，所以针对用户单独设置locale，也可以使用[chcon](https://aur.archlinux.org/packages/zhcon)<sup>AUR</sup>实现tty显示中文以及输入，~~反正我没用过~~
 
 ### 设置主机名
 
@@ -447,7 +452,7 @@ grub-install --target=x86_64-efi --efi-directory=/boot --bootloader-id=Arch
 vim /etc/default/grub
 ```
 
-在`GRUB_CMDLINE_LINUX_DEFAULT`中为了检查启动错误可以考虑删除`quiet`，加入`nowatchdog`参数禁用看门狗加快开机关机速度，~~不是服务器谁用这个啊~~
+在`GRUB_CMDLINE_LINUX_DEFAULT`中为了检查启动错误可以考虑删除`quiet`，加入`nmi_watchdog=0`参数禁用看门狗加快开机关机速度，~~不是服务器谁用这个啊~~
 
 如果是要加入windows启动项，除了要安装os-prober，还有取消最后一行的注释
 
@@ -575,11 +580,20 @@ echo EDITORS=vim >> ~/.bashrc # 如果使用其他shell改成对应文件
 sudo vim /etc/pacman.conf
 ```
 
-![image-20221231153608418](/home/nirlvy/Documents/nirlvy/docs/pic/image-20221231153608418.png)
+取消[multilib]下一行的注释，在最后追加四行，保存退出
 
-取消[multilib]下一行的注释
+```
+#[multilib]
+Include = /etc/pacman.d/mirrorlist
 
-在最后追加四行，保存退出
+# An example of a custom package repository.  See the pacman manpage for
+# tips on creating your own repositories.
+[archlinuxcn]
+Server = https://mirrors.ustc.edu.cn/archlinuxcn/$arch
+
+[arch4edu]
+Server = https://mirrors.tuna.tsinghua.edu.cn/arch4edu/$arch
+```
 
 ```bash
 sudo pacman -S archlinuxcn-keyring # archlinuxcn源密钥

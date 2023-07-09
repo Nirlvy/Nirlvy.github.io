@@ -4,10 +4,9 @@
 
 ```bash
 sudo pacman -S fcitx5-im
-sudo pacman -S fcitx5-rime
 sudo pacman -S fcitx5-chinese-addons # 官方中文输入引擎
-sudo pacman -S fcitx5-pinyin-moegirl-rime # 萌百词库
-sudo pacman -S fcitx5-pinyin-zhwiki-rime # 维基百科词汇
+sudo pacman -S fcitx5-pinyin-moegirl # 萌百词库
+sudo pacman -S fcitx5-pinyin-zhwiki # 维基百科词汇
 sudo pacman -S fcitx5-material-color # 输入法主题
 ```
 
@@ -60,10 +59,6 @@ GLFW_IM_MODULE=ibus # 只接受ibus参数
 ---
 
 ## 蓝牙
-
-```bash
-sudo pacman -S bluetooth
-```
 
 如果为桌面环境一般含有对应的蓝牙管理器
 
